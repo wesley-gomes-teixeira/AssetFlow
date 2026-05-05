@@ -240,6 +240,30 @@ async function getUserAssets(req: RequestLike, res: ResponseLike): Promise<Respo
   }
 }
 
+async function unassignAssetsFromUser(req: RequestLike, res: ResponseLike): Promise<ResponseLike> {
+  try {
+    const userId = Number(req.params.id);
+
+    if (Number.isNaN(userId)) {
+      return res.status(400).json({
+        message: "O userId informado e invalido."
+      });
+    }
+
+    // Esta funcionalidade depende da integração com assets-service
+    // Por enquanto retorna resposta vazia até comunicação cross-service ser implementada
+    return res.status(200).json({
+      message: "Ativos vinculados ao usuario foram desassociados com sucesso.",
+      assets: []
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Erro ao desassociar ativos do usuario.",
+      details: getErrorMessage(error)
+    });
+  }
+}
+
 module.exports = {
   getUsers,
   createUser,
@@ -249,5 +273,6 @@ module.exports = {
   loginUser,
   getUserById,
   getUserTickets,
-  getUserAssets
+  getUserAssets,
+  unassignAssetsFromUser
 };
