@@ -1,0 +1,69 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [20.x]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      
+      - name: Install dependencies (users-service)
+        run: cd users-service && npm install
+      
+      - name: Build (users-service)
+        run: cd users-service && npm run build
+      
+      - name: Install dependencies (assets-service)
+        run: cd assets-service && npm install
+      
+      - name: Build (assets-service)
+        run: cd assets-service && npm run build
+      
+      - name: Install dependencies (tickets-service)
+        run: cd tickets-service && npm install
+      
+      - name: Build (tickets-service)
+        run: cd tickets-service && npm run build
+      
+      - name: Install dependencies (gateway-service)
+        run: cd gateway-service && npm install
+      
+      - name: Build (gateway-service)
+        run: cd gateway-service && npm run build
+      
+      - name: Install dependencies (frontend-service)
+        run: cd frontend-service && npm install
+      
+      - name: Build (frontend-service)
+        run: cd frontend-service && npm run build
+
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - name: Trigger Render Deploy
+        run: |
+          curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }} \
+            -H "Content-Type: application/json" \
+            -d '{"service": "assetflow"}'
+        if: ${{ secrets.RENDER_DEPLOY_HOOK != '' }}
