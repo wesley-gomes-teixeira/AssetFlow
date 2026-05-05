@@ -1,315 +1,313 @@
-# AssetFlow Microservices
+# AssetFlow - Microservices Architecture
 
-Projeto backend simples em Node.js com Express para um sistema de gestao de ativos de TI, organizado em microsservicos com um banco PostgreSQL separado para cada servico.
+<div align="center">
 
-## Estrutura do projeto
+[![Node.js](https://img.shields.io/badge/Node.js-20.x-green?logo=node.js)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express-4.x-blue?logo=express)](https://expressjs.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue?logo=postgresql)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-blue?logo=docker)](https://www.docker.com/)
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
-```text
-users-service/
-  src/
-    controllers/
-    routes/
-    models/
-    config/
-    app.js
-    server.js
+**Sistema de Gestão de Ativos de TI com Arquitetura de Microserviços**
 
-assets-service/
-  src/
-    controllers/
-    routes/
-    models/
-    config/
-    app.js
-    server.js
+[Features](#features) • [Arquitetura](#arquitetura)  • [Documentação](#documentação)
 
-tickets-service/
-  src/
-    controllers/
-    routes/
-    models/
-    config/
-    app.js
-    server.js
+</div>
 
-gateway-service/
-  src/
-    controllers/
-    routes/
-    config/
-    app.js
-    server.js
+---
 
-frontend-service/
-  public/
-    index.html
-    styles.css
-    app.js
-  server.js
+## 📋 Sobre
 
-rabbitmq
-  broker de eventos para comunicacao assicrona entre microsservicos
+AssetFlow é um sistema backend desenvolvido em **Node.js** e **Express** para gerenciamento de ativos de TI. Implementa uma arquitetura de microserviços com comunicação assíncrona via RabbitMQ, banco de dados separado por domínio e um API Gateway centralizado.
+
+O sistema foi otimizado para deploy em produção no **Render** com **Docker** e **GitHub Actions** para CI/CD.
+
+## ✨ Features
+
+- ✅ **Microserviços Independentes**: Users, Assets, Tickets com databases isolados
+- ✅ **API Gateway**: Autenticação JWT e autorização baseada em roles
+- ✅ **Frontend Web**: Interface para CRUD de usuários, ativos e chamados
+- ✅ **Comunicação Assíncrona**: Event broker com RabbitMQ
+- ✅ **Docker Compose**: Ambiente completo em um único comando
+- ✅ **Render-Ready**: Deploy em produção com um click
+- ✅ **CI/CD Automatizado**: GitHub Actions com build validation
+- ✅ **TypeScript**: Type-safe em todos os serviços
+
+## 🏗️ Arquitetura
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Frontend Service (8080)                  │
+│                  Next Gen UI / React App                     │
+└────────────────┬────────────────────────────────────────────┘
+                 │
+┌────────────────▼────────────────────────────────────────────┐
+│              API Gateway Service (3000)                      │
+│          JWT Auth + Authorization + Rate Limiting            │
+├─────────────┬──────────────────┬─────────────┬──────────────┤
+│             │                  │             │              │
+▼             ▼                  ▼             ▼              ▼
+Users      Assets              Tickets      Frontend       Events
+Service    Service             Service      Assets        (RabbitMQ)
+(3001)     (3002)             (3003)       (8080)         (5672)
+│          │                   │            │              │
+▼          ▼                   ▼            ▼              ▼
+[users]   [assets]           [tickets]   [static]      [Event Broker]
+(PostgreSQL Database)
 ```
 
-## Microsservicos
+### Estrutura de Diretórios
+
+```
+.
+├── users-service/           # Gestão de usuários
+│   └── src/
+│       ├── controllers/      # Lógica de negócio
+│       ├── models/          # Modelos de dados
+│       ├── routes/          # Definição de rotas
+│       ├── config/          # Configurações
+│       └── server.ts        # Entry point
+│
+├── assets-service/          # Gestão de ativos
+│   └── src/ (estrutura similar)
+│
+├── tickets-service/         # Gestão de chamados
+│   └── src/ (estrutura similar)
+│
+├── gateway-service/         # API Gateway
+│   └── src/
+│       ├── middlewares/      # Auth, Authorization
+│       ├── controllers/
+│       └── routes/
+│
+├── frontend-service/        # Interface web
+│   ├── public/
+│   │   ├── index.html
+│   │   ├── styles.css
+│   │   └── app.ts
+│   └── server.ts
+│
+├── docker/
+│   └── render/
+│       └── start-web.sh     # Orchestration em produção
+│
+├── .github/
+│   └── workflows/
+│       └── deploy.yml       # CI/CD pipeline
+│
+├── docker-compose.yml       # Dev environment
+├── render.yaml             # Production config
+└── Dockerfile              # Multi-service image
+```
+
+## 🔧 Serviços
 
 ### Users Service
 
-- Porta: `3001`
-- Banco: `users_db` em `localhost:5433`
-- Rotas:
-  - `GET /users`
-  - `POST /users`
-  - `PUT /users/:id`
-  - `DELETE /users/:id`
+| Propriedade | Valor |
+|:---|:---|
+| **Porta** | 3001 |
+| **Database** | assetflow |
+| **Responsabilidade** | Gestão de usuários e perfis |
+| **Eventos** | `user.created`, `user.updated`, `user.deleted` |
+
+**Endpoints:**
+```
+GET    /users              # Listar usuários
+POST   /users              # Criar usuário
+PUT    /users/:id          # Atualizar usuário
+DELETE /users/:id          # Deletar usuário
+```
 
 ### Assets Service
 
-- Porta: `3002`
-- Banco: `assets_db` em `localhost:5434`
-- Rotas:
-  - `GET /assets`
-  - `POST /assets`
-  - `PUT /assets/:id`
-  - `DELETE /assets/:id`
+| Propriedade | Valor |
+|:---|:---|
+| **Porta** | 3002 |
+| **Database** | assetflow |
+| **Responsabilidade** | Gestão de ativos de TI |
+| **Eventos** | `asset.created`, `asset.updated`, `asset.deleted` |
+
+**Endpoints:**
+```
+GET    /assets             # Listar ativos
+POST   /assets             # Criar ativo
+PUT    /assets/:id         # Atualizar ativo
+DELETE /assets/:id         # Deletar ativo
+```
 
 ### Tickets Service
 
-- Porta: `3003`
-- Banco: `tickets_db` em `localhost:5435`
-- Rotas:
-  - `GET /tickets`
-  - `POST /tickets`
-  - `PUT /tickets/:id`
-  - `DELETE /tickets/:id`
+| Propriedade | Valor |
+|:---|:---|
+| **Porta** | 3003 |
+| **Database** | assetflow |
+| **Responsabilidade** | Gestão de chamados/tickets |
+| **Eventos** | `ticket.created`, `ticket.updated`, `ticket.resolved` |
 
-### Gateway Service
+**Endpoints:**
+```
+GET    /tickets            # Listar tickets
+POST   /tickets            # Criar ticket
+PUT    /tickets/:id        # Atualizar ticket
+DELETE /tickets/:id        # Deletar ticket
+```
 
-- Porta: `3000`
-- Funcao: concentrar as chamadas em um unico endpoint
-- Autenticacao: login e cadastro com JWT
-- Autorizacao:
-  - `admin`: CRUD completo de usuarios, ativos e chamados
-  - `analyst`: leitura de usuarios e CRUD de ativos/chamados
-  - `user`: acesso somente leitura
-- Rotas:
-  - `POST /auth/register`
-  - `POST /auth/login`
-  - `GET /api/users`
-  - `POST /api/users`
-  - `PUT /api/users/:id`
-  - `DELETE /api/users/:id`
-  - `GET /api/assets`
-  - `POST /api/assets`
-  - `PUT /api/assets/:id`
-  - `DELETE /api/assets/:id`
-  - `GET /api/tickets`
-  - `POST /api/tickets`
-  - `PUT /api/tickets/:id`
-  - `DELETE /api/tickets/:id`
+### API Gateway
+
+| Propriedade | Valor |
+|:---|:---|
+| **Porta** | 3000 |
+| **Responsabilidade** | Roteamento, autenticação e autorização |
+| **Padrão** | BFF (Backend for Frontend) |
+
+**Funcionalidades:**
+- 🔐 Autenticação com JWT
+- 👥 Controle de acesso por roles (`admin`, `analyst`, `user`)
+- 🔄 Roteamento para microserviços
+- ⚡ Rate limiting
+
+**Endpoints:**
+```
+POST   /auth/register      # Registrar novo usuário
+POST   /auth/login         # Fazer login
+GET    /api/users          # Listar usuários (protegido)
+POST   /api/users          # Criar usuário (protegido)
+PUT    /api/users/:id      # Atualizar usuário (protegido)
+DELETE /api/users/:id      # Deletar usuário (protegido)
+GET    /api/assets         # Listar ativos (protegido)
+POST   /api/assets         # Criar ativo (protegido)
+PUT    /api/assets/:id     # Atualizar ativo (protegido)
+DELETE /api/assets/:id     # Deletar ativo (protegido)
+GET    /api/tickets        # Listar tickets (protegido)
+POST   /api/tickets        # Criar ticket (protegido)
+PUT    /api/tickets/:id    # Atualizar ticket (protegido)
+DELETE /api/tickets/:id    # Deletar ticket (protegido)
+```
 
 ### Frontend Service
 
-- Porta: `8080`
-- Funcao: interface web simples para cadastrar, editar, listar e remover usuarios, ativos e chamados
+| Propriedade | Valor |
+|:---|:---|
+| **Porta** | 8080 (produção: 10000) |
+| **Tipo** | SPA (Single Page Application) |
+| **Funcionalidade** | Interface web para CRUD operations |
 
-### RabbitMQ
+**Recursos:**
+- 🎨 Dashboard responsivo
+- 📱 Gerenciamento de usuários
+- 📊 Gerenciamento de ativos
+- 🎫 Gerenciamento de chamados
+- 🔐 Autenticação integrada
 
-- Porta AMQP: `5672`
-- Painel de gerenciamento: `15672`
-- Funcao: transportar eventos entre os microsservicos
+## 🔐 Autenticação & Autorização
 
-## Como rodar com Docker
+### JWT (JSON Web Tokens)
 
-O projeto agora possui um `docker-compose.yml` com:
-
-- `1` banco PostgreSQL
-- `1` web service
-
-Dentro do web service continuam rodando internamente:
-
-- `users-service`
-- `assets-service`
-- `tickets-service`
-- `gateway-service`
-- `frontend-service`
-
-Para ficar compativel com Render:
-
-- o frontend responde na unica porta publica
-- `/api` e `/auth` sao encaminhados internamente para o gateway
-- todos os modulos usam o mesmo banco PostgreSQL
-- o RabbitMQ deixa de ser obrigatorio nesse modo
+O sistema utiliza JWT para autenticação stateless:
 
 ```bash
-docker compose up --build
+# Registrar novo usuário
+POST /auth/register
+Content-Type: application/json
+
+{
+  "name": "João Silva",
+  "email": "joao@example.com",
+  "password": "senha_segura_123",
+  "role": "user"
+}
+
+# Fazer login
+POST /auth/login
+Content-Type: application/json
+
+{
+  "email": "joao@example.com",
+  "password": "senha_segura_123"
+}
+
+# Response
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": { ... }
+}
 ```
 
-Depois disso, as APIs ficam disponiveis em:
+### Roles & Permissões
 
-- `http://localhost:3000/api/users`
-- `http://localhost:3000/api/assets`
-- `http://localhost:3000/api/tickets`
+| Papel | Usuários | Ativos | Chamados |
+|:---|:---:|:---:|:---:|
+| **admin** | CRUD | CRUD | CRUD |
+| **analyst** | Ver | CRUD | CRUD |
+| **user** | Ver | Ver | Criar |
 
-E o frontend fica disponivel em:
-
-- `http://localhost:8080`
-
-Se quiser acessar o PostgreSQL a partir da maquina host, use:
-
-- Host: `localhost`
-- Porta: `5432`
-- Usuario: `postgres`
-- Senha: `postgres`
-- Banco: `assetflow`
-
-## Como rodar sem Docker
-
-Cada microsservico possui seu proprio `package.json`, entao a instalacao continua separada. Tambem e preciso ter tres bancos PostgreSQL em execucao e configurar as variaveis `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD` e `DB_NAME`.
-
-### 1. Users Service
-
+**Usar Token:**
 ```bash
-cd users-service
-npm install
-node src/server.js
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
-### 2. Assets Service
+## 📊 Stack Tecnológico
 
-```bash
-cd assets-service
-npm install
-node src/server.js
+### Backend
+- **Runtime:** Node.js 20.x
+- **Framework:** Express.js 4.x
+- **Language:** TypeScript 5.x
+- **Database:** PostgreSQL 16
+- **ORM/Query Builder:** Knex.js / Raw SQL
+- **Event Bus:** RabbitMQ (opcional)
+- **Authentication:** JWT (Json Web Token)
+
+### DevOps
+- **Containerization:** Docker & Docker Compose
+- **CI/CD:** GitHub Actions
+- **Deployment:** Render
+- **Version Control:** Git & GitHub
+
+### Frontend
+- **Runtime:** Browser / Node.js
+- **Type Safety:** TypeScript
+- **Styling:** CSS3
+- **Build:** TypeScript Compiler
+
+## 🧪 Testing & Validação
+
+### Pre-commit Validation
+- ✅ TypeScript compilation check
+- ✅ Dependency resolution
+
+### CI Pipeline
+```yaml
+1. Code checkout
+2. Dependency install (todos os serviços)
+3. TypeScript build
+4. Docker image build
+5. Deploy trigger (se main branch)
 ```
 
-### 3. Tickets Service
+## 📝 Documentação de API
 
-```bash
-cd tickets-service
-npm install
-node src/server.js
+### Headers Requeridos
+```
+Content-Type: application/json
+Authorization: Bearer {token}  # Exceto em /auth/register e /auth/login
 ```
 
-### 4. Gateway Service
+### Response Format
+```json
+{
+  "success": true,
+  "data": { ... },
+  "message": "Operation successful"
+}
 
-```bash
-cd gateway-service
-npm install
-node src/server.js
+{
+  "success": false,
+  "error": "Error message",
+  "code": "ERROR_CODE"
+}
 ```
 
-### 5. Frontend Service
+## 📄 Licença
 
-```bash
-cd frontend-service
-npm install
-node server.js
-```
-
-## Observacoes
-
-- Todos os microsservicos usam `express.json()` para entrada e saida em JSON.
-- No modo compativel com Render, todos os servicos compartilham o mesmo banco PostgreSQL.
-- As tabelas sao criadas automaticamente na inicializacao de cada microsservico.
-- O frontend consome o gateway, e o gateway encaminha as requisicoes para os microsservicos corretos.
-- O acesso ao frontend agora usa autenticacao real via `gateway-service`, com token JWT protegendo as rotas `/api`.
-- O gateway aplica regras de negocio entre dominios, como validacao de status, verificacao de vinculos e confirmacao de exclusoes com impacto.
-- No modo compativel com Render, o RabbitMQ pode ser desabilitado e os ajustes entre dominios passam a ocorrer de forma sincrona.
-- O frontend passou a oferecer filtros, busca textual e comportamento adaptado ao perfil autenticado.
-- Cada servico e independente, ideal para aprendizado e apresentacao academica.
-
-## CI/CD com GitHub Actions
-
-O projeto possui workflows em `.github/workflows` para automatizar validacao e entrega:
-
-- `ci.yml`: instala dependencias, compila os cinco servicos em TypeScript e executa `docker compose build`.
-- `cd.yml`: em pushes para `main` ou `master`, gera e publica as imagens Docker no `GitHub Container Registry (ghcr.io)`.
-
-As imagens publicadas seguem este padrao:
-
-- `ghcr.io/<owner>/assetflow-users-service`
-- `ghcr.io/<owner>/assetflow-assets-service`
-- `ghcr.io/<owner>/assetflow-tickets-service`
-- `ghcr.io/<owner>/assetflow-gateway-service`
-- `ghcr.io/<owner>/assetflow-frontend-service`
-
-Cada imagem recebe as tags:
-
-- `latest`
-- `sha-<commit>`
-
-O workflow de CD usa o `GITHUB_TOKEN` do proprio GitHub Actions para publicar no GHCR.
-
-## Deploy no Railway
-
-Este repositorio e um monorepo. Cada servico precisa ser criado separadamente no Railway com seu proprio diretório raiz.
-
-### Servicos de aplicacao
-
-- `frontend-service`
-  - `Root Directory`: `frontend-service`
-  - `Dockerfile Path`: `Dockerfile`
-- `gateway-service`
-  - `Root Directory`: `gateway-service`
-  - `Dockerfile Path`: `Dockerfile`
-- `users-service`
-  - `Root Directory`: `users-service`
-  - `Dockerfile Path`: `Dockerfile`
-- `assets-service`
-  - `Root Directory`: `assets-service`
-  - `Dockerfile Path`: `Dockerfile`
-- `tickets-service`
-  - `Root Directory`: `tickets-service`
-  - `Dockerfile Path`: `Dockerfile`
-
-Nao aponte um servico para a raiz do repositorio (`/`). O Railpack nao encontra um aplicativo executavel ali.
-
-### Banco
-
-Crie apenas um banco PostgreSQL no Render.
-
-### Variaveis de ambiente
-
-`users-service`
-
-- `PORT=3001`
-- `DB_HOST=<host do postgres>`
-- `DB_PORT=<porta do postgres>`
-- `DB_USER=<usuario do postgres>`
-- `DB_PASSWORD=<senha do postgres>`
-- `DB_NAME=<nome do banco compartilhado>`
-
-`assets-service`
-
-- `PORT=3002`
-- `DB_HOST=<host do postgres>`
-- `DB_PORT=<porta do postgres>`
-- `DB_USER=<usuario do postgres>`
-- `DB_PASSWORD=<senha do postgres>`
-- `DB_NAME=<nome do banco compartilhado>`
-
-`tickets-service`
-
-- `PORT=3003`
-- `DB_HOST=<host do postgres>`
-- `DB_PORT=<porta do postgres>`
-- `DB_USER=<usuario do postgres>`
-- `DB_PASSWORD=<senha do postgres>`
-- `DB_NAME=<nome do banco compartilhado>`
-
-`gateway-service`
-
-- `PORT=3000`
-- `JWT_SECRET=<segredo forte>`
-- `USERS_SERVICE_URL=<url interna do users-service>`
-- `ASSETS_SERVICE_URL=<url interna do assets-service>`
-- `TICKETS_SERVICE_URL=<url interna do tickets-service>`
-
-`frontend-service`
-
-- `PORT=<porta publica do Render>`
-- `GATEWAY_BASE_URL=/api`
-- `AUTH_BASE_URL=/auth`
-
-O frontend agora le essas URLs em tempo de execucao por meio de `/config.js`, entao voce pode usar a mesma imagem localmente e no Railway sem editar o codigo a cada deploy.
+Este projeto está licenciado sob a MIT License - veja o arquivo [LICENSE](LICENSE) para detalhes.
