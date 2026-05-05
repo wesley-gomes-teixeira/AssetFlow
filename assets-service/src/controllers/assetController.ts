@@ -122,10 +122,50 @@ async function unassignAssetsFromUser(req: RequestLike, res: ResponseLike): Prom
   }
 }
 
+async function getAssetById(req: RequestLike, res: ResponseLike): Promise<ResponseLike> {
+  try {
+    const id = Number(req.params.id);
+    const asset = await assetModel.findAssetById(id);
+
+    if (!asset) {
+      return res.status(404).json({
+        message: "Ativo nao encontrado."
+      });
+    }
+
+    return res.status(200).json(asset);
+  } catch (error) {
+    return res.status(500).json({
+      message: "Erro ao buscar ativo.",
+      details: getErrorMessage(error)
+    });
+  }
+}
+
+async function getAssetTickets(req: RequestLike, res: ResponseLike): Promise<ResponseLike> {
+  try {
+    const assetId = Number(req.params.id);
+    // Esta funcionalidade depende da integração com tickets-service
+    // Por enquanto retorna resposta vazia até comunicação cross-service ser implementada
+    return res.status(200).json({
+      assetId,
+      tickets: [],
+      message: "Funcionalidade de sincronização de tickets em desenvolvimento."
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Erro ao buscar tickets do ativo.",
+      details: getErrorMessage(error)
+    });
+  }
+}
+
 module.exports = {
   getAssets,
   createAsset,
   updateAsset,
   deleteAsset,
-  unassignAssetsFromUser
+  unassignAssetsFromUser,
+  getAssetById,
+  getAssetTickets
 };

@@ -10,16 +10,25 @@ const {
 const router = express.Router();
 const assetsServiceUrl = process.env.ASSETS_SERVICE_URL || "http://localhost:3002";
 
+// Assets CRUD Routes
 router.get("/assets", authorizeRoles("admin", "analyst", "user"), (req, res) =>
   forwardRequest(req, res, assetsServiceUrl)
 );
 router.post("/assets", authorizeRoles("admin", "analyst"), validateAssetPayload, (req, res) =>
   forwardRequest(req, res, assetsServiceUrl)
 );
+router.get("/assets/:id", authorizeRoles("admin", "analyst", "user"), (req, res) =>
+  forwardRequest(req, res, assetsServiceUrl)
+);
 router.put("/assets/:id", authorizeRoles("admin", "analyst"), validateAssetPayload, (req, res) =>
   forwardRequest(req, res, assetsServiceUrl)
 );
 router.delete("/assets/:id", authorizeRoles("admin", "analyst"), ensureAssetDeleteAllowed, (req, res) =>
+  forwardRequest(req, res, assetsServiceUrl)
+);
+
+// Asset Relations
+router.get("/assets/:id/tickets", authorizeRoles("admin", "analyst", "user"), (req, res) =>
   forwardRequest(req, res, assetsServiceUrl)
 );
 

@@ -180,11 +180,70 @@ async function loginUser(req: RequestLike, res: ResponseLike): Promise<ResponseL
   }
 }
 
+async function getUserById(req: RequestLike, res: ResponseLike): Promise<ResponseLike> {
+  try {
+    const id = Number(req.params.id);
+    const user = await userModel.findUserById(id);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "Usuario nao encontrado."
+      });
+    }
+
+    return res.status(200).json(user);
+  } catch (error) {
+    return res.status(500).json({
+      message: "Erro ao buscar usuario.",
+      details: getErrorMessage(error)
+    });
+  }
+}
+
+async function getUserTickets(req: RequestLike, res: ResponseLike): Promise<ResponseLike> {
+  try {
+    const userId = Number(req.params.id);
+    // Esta funcionalidade depende da integração com tickets-service
+    // Por enquanto retorna resposta vazia até comunicação cross-service ser implementada
+    return res.status(200).json({
+      userId,
+      tickets: [],
+      message: "Funcionalidade de sincronização de tickets em desenvolvimento."
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Erro ao buscar tickets do usuario.",
+      details: getErrorMessage(error)
+    });
+  }
+}
+
+async function getUserAssets(req: RequestLike, res: ResponseLike): Promise<ResponseLike> {
+  try {
+    const userId = Number(req.params.id);
+    // Esta funcionalidade depende da integração com assets-service
+    // Por enquanto retorna resposta vazia até comunicação cross-service ser implementada
+    return res.status(200).json({
+      userId,
+      assets: [],
+      message: "Funcionalidade de sincronização de ativos em desenvolvimento."
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Erro ao buscar ativos do usuario.",
+      details: getErrorMessage(error)
+    });
+  }
+}
+
 module.exports = {
   getUsers,
   createUser,
   updateUser,
   deleteUser,
   registerUser,
-  loginUser
+  loginUser,
+  getUserById,
+  getUserTickets,
+  getUserAssets
 };

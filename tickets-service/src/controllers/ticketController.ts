@@ -128,10 +128,91 @@ async function markTicketsWithoutAsset(req: RequestLike, res: ResponseLike): Pro
   }
 }
 
+async function getTicketById(req: RequestLike, res: ResponseLike): Promise<ResponseLike> {
+  try {
+    const id = Number(req.params.id);
+    const ticket = await ticketModel.findTicketById(id);
+
+    if (!ticket) {
+      return res.status(404).json({
+        message: "Chamado nao encontrado."
+      });
+    }
+
+    return res.status(200).json(ticket);
+  } catch (error) {
+    return res.status(500).json({
+      message: "Erro ao buscar chamado.",
+      details: getErrorMessage(error)
+    });
+  }
+}
+
+async function updateTicketStatus(req: RequestLike, res: ResponseLike): Promise<ResponseLike> {
+  try {
+    const id = Number(req.params.id);
+    const { status } = req.body;
+
+    if (!status) {
+      return res.status(400).json({
+        message: "O campo status é obrigatório."
+      });
+    }
+
+    const updatedTicket = await ticketModel.updateTicketStatus(id, status);
+
+    if (!updatedTicket) {
+      return res.status(404).json({
+        message: "Chamado nao encontrado."
+      });
+    }
+
+    await publishEvent("ticket.status-updated", updatedTicket);
+    return res.status(200).json(updatedTicket);
+  } catch (error) {
+    return res.status(500).json({
+      message: "Erro ao atualizar status do chamado.",
+      details: getErrorMessage(error)
+    });
+  }
+}
+
+async function assignTicket(req: RequestLike, res: ResponseLike): Promise<ResponseLike> {
+  try {
+    const id = Number(req.params.id);
+    const { assignedTo } = req.body;
+
+    if (assignedTo === undefined) {
+      return res.status(400).json({
+        message: "O campo assignedTo é obrigatório."
+      });
+    }
+
+    const updatedTicket = await ticketModel.assignTicket(id, assignedTo);
+
+    if (!updatedTicket) {
+      return res.status(404).json({
+        message: "Chamado nao encontrado."
+      });
+    }
+
+    await publishEvent("ticket.assigned", updatedTicket);
+    return res.status(200).json(updatedTicket);
+  } catch (error) {
+    return res.status(500).json({
+      message: "Erro ao atribuir chamado.",
+      details: getErrorMessage(error)
+    });
+  }
+}
+
 module.exports = {
   getTickets,
   createTicket,
   updateTicket,
   deleteTicket,
-  markTicketsWithoutAsset
+  markTicketsWithoutAsset,
+  getTicketById,
+  updateTicketStatus,
+  assignTicket
 };

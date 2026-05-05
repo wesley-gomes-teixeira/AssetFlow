@@ -7,16 +7,28 @@ const { validateTicketPayload } = require("../middlewares/businessRulesMiddlewar
 const router = express.Router();
 const ticketsServiceUrl = process.env.TICKETS_SERVICE_URL || "http://localhost:3003";
 
+// Tickets CRUD Routes
 router.get("/tickets", authorizeRoles("admin", "analyst", "user"), (req, res) =>
   forwardRequest(req, res, ticketsServiceUrl)
 );
 router.post("/tickets", authorizeRoles("admin", "analyst", "user"), validateTicketPayload, (req, res) =>
   forwardRequest(req, res, ticketsServiceUrl)
 );
+router.get("/tickets/:id", authorizeRoles("admin", "analyst", "user"), (req, res) =>
+  forwardRequest(req, res, ticketsServiceUrl)
+);
 router.put("/tickets/:id", authorizeRoles("admin", "analyst"), validateTicketPayload, (req, res) =>
   forwardRequest(req, res, ticketsServiceUrl)
 );
 router.delete("/tickets/:id", authorizeRoles("admin", "analyst"), (req, res) =>
+  forwardRequest(req, res, ticketsServiceUrl)
+);
+
+// Ticket Status Endpoints
+router.patch("/tickets/:id/status", authorizeRoles("admin", "analyst"), (req, res) =>
+  forwardRequest(req, res, ticketsServiceUrl)
+);
+router.patch("/tickets/:id/assign", authorizeRoles("admin", "analyst"), (req, res) =>
   forwardRequest(req, res, ticketsServiceUrl)
 );
 

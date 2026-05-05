@@ -2,7 +2,7 @@ export {};
 const userRoutes = require("../routes/userRoutes");
 
 function registerRoutes(app): void {
-  app.use("/", userRoutes);
+  app.use("/api/v1", userRoutes);
 }
 
 module.exports = registerRoutes;
