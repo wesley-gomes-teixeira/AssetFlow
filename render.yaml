@@ -11,23 +11,15 @@ services:
       - key: PORT
         value: "10000"
       - key: DB_HOST
-        fromDatabase:
-          name: assetflow-db
-          property: host
+        value: dpg-d7t64hq8qa3s73f99sk0-a
       - key: DB_PORT
-        fromDatabase:
-          name: assetflow-db
-          property: port
+        value: "5432"
       - key: DB_USER
-        fromDatabase:
-          name: assetflow-db
-          property: user
+        value: wesley
       - key: DB_PASSWORD
-        fromDatabase:
-          name: assetflow-db
-          property: password
+        value: TyGuEFKgZIfLYEnFd6txgHed2gXOQjK5
       - key: DB_NAME
-        value: assetflow
+        value: assetflow_5x76
       - key: JWT_SECRET
         value: assetflow-secret-change-in-production
       - key: DISABLE_RABBITMQ
@@ -45,9 +37,4 @@ services:
       - key: TICKETS_SERVICE_URL
         value: http://127.0.0.1:3003
 
-databases:
-  - name: assetflow-db
-    plan: free
-    region: oregon
-    databaseName: assetflow
-    user: postgres
+
