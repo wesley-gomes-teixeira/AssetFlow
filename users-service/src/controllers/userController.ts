@@ -183,7 +183,9 @@ async function loginUser(req: RequestLike, res: ResponseLike): Promise<ResponseL
 async function getUserById(req: RequestLike, res: ResponseLike): Promise<ResponseLike> {
   try {
     const id = Number(req.params.id);
-    const user = await userModel.findUserById(id);
+    // Buscar todos os usuários e filtrar (modelo não tem findById)
+    const users = await userModel.getAllUsers();
+    const user = users.find((u: any) => u.id === id);
 
     if (!user) {
       return res.status(404).json({
@@ -191,7 +193,9 @@ async function getUserById(req: RequestLike, res: ResponseLike): Promise<Respons
       });
     }
 
-    return res.status(200).json(user);
+    // Remover password da resposta
+    const { password, ...userWithoutPassword } = user;
+    return res.status(200).json(userWithoutPassword);
   } catch (error) {
     return res.status(500).json({
       message: "Erro ao buscar usuario.",

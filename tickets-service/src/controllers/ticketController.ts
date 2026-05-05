@@ -131,7 +131,9 @@ async function markTicketsWithoutAsset(req: RequestLike, res: ResponseLike): Pro
 async function getTicketById(req: RequestLike, res: ResponseLike): Promise<ResponseLike> {
   try {
     const id = Number(req.params.id);
-    const ticket = await ticketModel.findTicketById(id);
+    // Buscar todos os chamados e filtrar (modelo não tem findById)
+    const tickets = await ticketModel.getAllTickets();
+    const ticket = tickets.find((t: any) => t.id === id);
 
     if (!ticket) {
       return res.status(404).json({
@@ -159,7 +161,8 @@ async function updateTicketStatus(req: RequestLike, res: ResponseLike): Promise<
       });
     }
 
-    const updatedTicket = await ticketModel.updateTicketStatus(id, status);
+    // Usar updateTicket para atualizar status
+    const updatedTicket = await ticketModel.updateTicket(id, { status });
 
     if (!updatedTicket) {
       return res.status(404).json({
@@ -188,7 +191,8 @@ async function assignTicket(req: RequestLike, res: ResponseLike): Promise<Respon
       });
     }
 
-    const updatedTicket = await ticketModel.assignTicket(id, assignedTo);
+    // Usar updateTicket para atualizar assignedTo
+    const updatedTicket = await ticketModel.updateTicket(id, { assignedTo });
 
     if (!updatedTicket) {
       return res.status(404).json({

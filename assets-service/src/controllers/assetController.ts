@@ -125,7 +125,9 @@ async function unassignAssetsFromUser(req: RequestLike, res: ResponseLike): Prom
 async function getAssetById(req: RequestLike, res: ResponseLike): Promise<ResponseLike> {
   try {
     const id = Number(req.params.id);
-    const asset = await assetModel.findAssetById(id);
+    // Buscar todos os ativos e filtrar (modelo não tem findById)
+    const assets = await assetModel.getAllAssets();
+    const asset = assets.find((a: any) => a.id === id);
 
     if (!asset) {
       return res.status(404).json({
