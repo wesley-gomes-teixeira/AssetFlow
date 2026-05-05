@@ -1,0 +1,53 @@
+services:
+  - type: web
+    name: assetflow
+    env: docker
+    repo: https://github.com/wesley-gomes-teixeira/teste.git
+    dockerfilePath: ./Dockerfile
+    dockerContext: ./
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: PORT
+        value: "10000"
+      - key: DB_HOST
+        fromDatabase:
+          name: assetflow-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: assetflow-db
+          property: port
+      - key: DB_USER
+        fromDatabase:
+          name: assetflow-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: assetflow-db
+          property: password
+      - key: DB_NAME
+        value: assetflow
+      - key: JWT_SECRET
+        value: assetflow-secret-change-in-production
+      - key: DISABLE_RABBITMQ
+        value: "true"
+      - key: INTERNAL_GATEWAY_URL
+        value: http://127.0.0.1:3000
+      - key: GATEWAY_BASE_URL
+        value: /api
+      - key: AUTH_BASE_URL
+        value: /auth
+      - key: USERS_SERVICE_URL
+        value: http://127.0.0.1:3001
+      - key: ASSETS_SERVICE_URL
+        value: http://127.0.0.1:3002
+      - key: TICKETS_SERVICE_URL
+        value: http://127.0.0.1:3003
+
+databases:
+  - name: assetflow-db
+    plan: free
+    region: oregon
+    databaseName: assetflow
+    user: postgres
