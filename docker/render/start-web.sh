@@ -2,6 +2,12 @@
 set -euo pipefail
 
 export PORT="${PORT:-10000}"
+export DB_HOST="${DB_HOST:-localhost}"
+export DB_PORT="${DB_PORT:-5432}"
+export DB_USER="${DB_USER:-postgres}"
+export DB_PASSWORD="${DB_PASSWORD:-postgres}"
+export DB_NAME="${DB_NAME:-assetflow}"
+export JWT_SECRET="${JWT_SECRET:-assetflow-secret}"
 export INTERNAL_GATEWAY_URL="${INTERNAL_GATEWAY_URL:-http://127.0.0.1:3000}"
 export GATEWAY_BASE_URL="${GATEWAY_BASE_URL:-/api}"
 export AUTH_BASE_URL="${AUTH_BASE_URL:-/auth}"
