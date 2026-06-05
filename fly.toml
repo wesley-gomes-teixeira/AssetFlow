@@ -1,10 +1,10 @@
-# fly.toml app configuration file generated for assetflow on 2026-06-05T16:46:09Z
+# fly.toml app configuration file generated for assetflow on 2026-06-05T17:49:00Z
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
 app = 'assetflow'
-primary_region = 'iad'
+primary_region = 'ams'
 
 [build]
 
