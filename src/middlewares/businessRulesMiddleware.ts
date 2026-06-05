@@ -1,0 +1,199 @@
+const { getAllUsers, getUserById } = require("../models/userModel");
+const { getAllAssets, getAssetById } = require("../models/assetModel");
+import type { NextFunction, RequestLike, ResponseLike, ServiceError } from "../types";
+
+const allowedAssetStatuses = [
+  "disponivel",
+  "em uso",
+  "em manutencao",
+  "reservado",
+  "pendente de reassociacao",
+  "desativado"
+];
+
+const allowedTicketStatuses = [
+  "aberto",
+  "em andamento",
+  "aguardando ativo",
+  "resolvido",
+  "fechado"
+];
+
+function normalizeStatus(value: unknown): string {
+  return String(value || "").trim().toLowerCase();
+}
+
+function normalizeOptionalRelationId(value: unknown): number | null {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+
+  const parsed = Number(value);
+  return Number.isNaN(parsed) ? Number.NaN : parsed;
+}
+
+async function validateAssetPayload(
+  req: RequestLike,
+  res: ResponseLike,
+  next: NextFunction
+): Promise<ResponseLike | void> {
+  try {
+    const { name, type, status, userId } = req.body;
+    const normalizedUserId = normalizeOptionalRelationId(userId);
+
+    if (!name || !type || !status) {
+      return res.status(400).json({
+        message: "Os campos name, type e status sao obrigatorios."
+      });
+    }
+
+    if (!allowedAssetStatuses.includes(normalizeStatus(status))) {
+      return res.status(400).json({
+        message: "O status informado para o ativo e invalido."
+      });
+    }
+
+    if (Number.isNaN(normalizedUserId)) {
+      return res.status(400).json({
+        message: "O campo userId precisa ser numerico quando informado."
+      });
+    }
+
+    if (normalizedUserId === null) {
+      req.body.userId = null;
+      return next();
+    }
+
+    const user = await getUserById(normalizedUserId);
+
+    if (!user) {
+      return res.status(400).json({
+        message: "O usuario informado para o ativo nao existe."
+      });
+    }
+
+    req.body.userId = normalizedUserId;
+    return next();
+  } catch (error) {
+    const serviceError = error as ServiceError;
+
+    return res.status(serviceError.status || 500).json({
+      message: serviceError.message
+    });
+  }
+}
+
+async function validateTicketPayload(
+  req: RequestLike,
+  res: ResponseLike,
+  next: NextFunction
+): Promise<ResponseLike | void> {
+  try {
+    const { title, description, status, assetId } = req.body;
+    const normalizedAssetId = normalizeOptionalRelationId(assetId);
+
+    if (!title || !description || !status) {
+      return res.status(400).json({
+        message: "Os campos title, description e status sao obrigatorios."
+      });
+    }
+
+    if (!allowedTicketStatuses.includes(normalizeStatus(status))) {
+      return res.status(400).json({
+        message: "O status informado para o chamado e invalido."
+      });
+    }
+
+    if (Number.isNaN(normalizedAssetId)) {
+      return res.status(400).json({
+        message: "O campo assetId precisa ser numerico quando informado."
+      });
+    }
+
+    if (normalizedAssetId === null) {
+      req.body.assetId = null;
+      return next();
+    }
+
+    const asset = await getAssetById(normalizedAssetId);
+
+    if (!asset) {
+      return res.status(400).json({
+        message: "O ativo informado para o chamado nao existe."
+      });
+    }
+
+    req.body.assetId = normalizedAssetId;
+    return next();
+  } catch (error) {
+    const serviceError = error as ServiceError;
+
+    return res.status(serviceError.status || 500).json({
+      message: serviceError.message
+    });
+  }
+}
+
+async function ensureUserDeleteAllowed(
+  req: RequestLike,
+  res: ResponseLike,
+  next: NextFunction
+): Promise<ResponseLike | void> {
+  try {
+    const userId = Number(req.params.id);
+    const force = req.query.force === "true";
+    const assets = await getAllAssets();
+    const hasLinkedAssets = assets.some((asset) => Number(asset.userId) === userId);
+
+    if (hasLinkedAssets && !force) {
+      return res.status(409).json({
+        message: "Nao e possivel remover um usuario que possui ativos associados.",
+        details: "Use ?force=true para forcar a remocao."
+      });
+    }
+
+    return next();
+  } catch (error) {
+    const serviceError = error as ServiceError;
+
+    return res.status(serviceError.status || 500).json({
+      message: serviceError.message
+    });
+  }
+}
+
+async function ensureAssetDeleteAllowed(
+  req: RequestLike,
+  res: ResponseLike,
+  next: NextFunction
+): Promise<ResponseLike | void> {
+  try {
+    const assetId = Number(req.params.id);
+    const force = req.query.force === "true";
+    const { getAllTickets } = require("../models/ticketModel");
+    const tickets = await getAllTickets();
+    const hasLinkedTickets = tickets.some((ticket) => Number(ticket.assetId) === assetId);
+
+    if (hasLinkedTickets && !force) {
+      return res.status(409).json({
+        message: "Nao e possivel remover um ativo que possui chamados associados.",
+        details: "Use ?force=true para forcar a remocao."
+      });
+    }
+
+    return next();
+  } catch (error) {
+    const serviceError = error as ServiceError;
+
+    return res.status(serviceError.status || 500).json({
+      message: serviceError.message
+    });
+  }
+}
+
+module.exports = {
+  validateAssetPayload,
+  validateTicketPayload,
+  ensureUserDeleteAllowed,
+  ensureAssetDeleteAllowed
+};

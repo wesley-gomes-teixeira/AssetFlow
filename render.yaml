@@ -7,47 +7,34 @@ services:
     dockerContext: ./
     plan: free
     healthCheckPath: /
-
     envVars:
       - key: PORT
         value: "10000"
-
-      # PostgreSQL Render
       - key: DB_HOST
-        value: dpg-d8hese4vikkc73f6mip0-a.oregon-postgres.render.com
-
+        value: dpg-d7t64hq8qa3s73f99sk0-a
       - key: DB_PORT
         value: "5432"
-
       - key: DB_USER
         value: wesley
-
       - key: DB_PASSWORD
-        sync: false
-
+        value: TyGuEFKgZIfLYEnFd6txgHed2gXOQjK5
       - key: DB_NAME
-        value: assetflow_xyog
-
+        value: assetflow_5x76
       - key: JWT_SECRET
         value: assetflow-secret-change-in-production
-
       - key: DISABLE_RABBITMQ
         value: "true"
-
       - key: INTERNAL_GATEWAY_URL
         value: http://127.0.0.1:3000
-
       - key: GATEWAY_BASE_URL
         value: /api
-
       - key: AUTH_BASE_URL
         value: /auth
-
       - key: USERS_SERVICE_URL
         value: http://127.0.0.1:3001
-
       - key: ASSETS_SERVICE_URL
         value: http://127.0.0.1:3002
-
       - key: TICKETS_SERVICE_URL
         value: http://127.0.0.1:3003
+
+

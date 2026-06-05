@@ -19,23 +19,25 @@ services:
   assetflow:
     build:
       context: .
+      dockerfile: Dockerfile.monolith
     container_name: assetflow-web
     environment:
-      PORT: 8080
+      PORT: 10000
       DB_HOST: postgres
       DB_PORT: 5432
       DB_USER: postgres
       DB_PASSWORD: postgres
       DB_NAME: assetflow
-      JWT_SECRET: assetflow-secret
+      JWT_SECRET: test-secret-key
       DISABLE_RABBITMQ: "true"
+      NODE_ENV: development
     ports:
-      - "8080:8080"
+      - "10000:10000"
     depends_on:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      test: ["CMD", "curl", "-f", "http://localhost:10000/health"]
       interval: 30s
       timeout: 10s
       retries: 5

@@ -1,0 +1,29 @@
+{
+  "name": "assetflow-monolith",
+  "version": "1.0.0",
+  "description": "AssetFlow - Aplicacao Monolitica de Gerenciamento de Ativos",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "ts-node src/server.ts",
+    "prebuild": "npm ci"
+  },
+  "keywords": ["assetflow", "assets", "tickets", "monolith"],
+  "author": "AssetFlow Team",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "pg": "^8.13.3",
+    "amqplib": "^0.10.5"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "ts-node": "^10.9.1",
+    "@types/node": "^20.11.0",
+    "@types/express": "^4.17.21",
+    "@types/bcryptjs": "^2.4.6"
+  }
+}

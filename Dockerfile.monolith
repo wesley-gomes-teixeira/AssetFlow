@@ -1,0 +1,30 @@
+FROM node:20-bookworm
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends curl \
+  && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /workspace
+
+# Copiar apenas arquivos necessários para instalar dependências
+COPY package.json package-lock.json* tsconfig.json ./
+
+# Instalar dependências (inclui devDeps para permitir `tsc`)
+RUN npm install
+
+# Copiar código-fonte
+COPY src ./src
+
+# Copiar scripts
+COPY docker/monolith/start-monolith.sh /usr/local/bin/start-monolith.sh
+RUN chmod +x /usr/local/bin/start-monolith.sh
+
+# Build TypeScript
+RUN npm run build
+
+# Remover devDependencies para production (opcional, mantém para debugging)
+# RUN npm prune --production
+
+EXPOSE 10000
+
+CMD ["/usr/local/bin/start-monolith.sh"]
