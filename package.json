@@ -1,29 +1,37 @@
 {
-  "name": "assetflow-monolith",
+  "name": "assetflow",
   "version": "1.0.0",
-  "description": "AssetFlow - Aplicacao Monolitica de Gerenciamento de Ativos",
-  "main": "dist/server.js",
+  "description": "IT Asset Management System with Microservices Architecture",
+  "type": "module",
+  "private": true,
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "dev": "ts-node src/server.ts",
-    "prebuild": "npm ci"
+    "dev": "docker-compose -f docker-compose.yml up",
+    "dev:down": "docker-compose down",
+    "dev:logs": "docker-compose logs -f",
+    "build:all": "npm run build:users && npm run build:assets && npm run build:tickets && npm run build:gateway && npm run build:frontend",
+    "build:users": "cd users-service && npm install && npm run build",
+    "build:assets": "cd assets-service && npm install && npm run build",
+    "build:tickets": "cd tickets-service && npm install && npm run build",
+    "build:gateway": "cd gateway-service && npm install && npm run build",
+    "build:frontend": "cd frontend-service && npm install && npm run build",
+    "docker:build": "docker build -t assetflow:latest .",
+    "docker:run": "docker run -p 10000:10000 -e DATABASE_URL=postgresql://user:pass@host/db assetflow:latest",
+    "health-check": "curl http://localhost:10000/health || echo 'Service not healthy'",
+    "clean": "rm -rf users-service/dist assets-service/dist tickets-service/dist gateway-service/dist frontend-service/dist"
   },
-  "keywords": ["assetflow", "assets", "tickets", "monolith"],
-  "author": "AssetFlow Team",
+  "keywords": [
+    "microservices",
+    "node.js",
+    "express",
+    "typescript",
+    "postgresql",
+    "docker",
+    "render"
+  ],
+  "author": "",
   "license": "MIT",
-  "dependencies": {
-    "express": "^4.21.2",
-    "jsonwebtoken": "^9.0.2",
-    "bcryptjs": "^2.4.3",
-    "pg": "^8.13.3",
-    "amqplib": "^0.10.5"
-  },
-  "devDependencies": {
-    "typescript": "^5.9.3",
-    "ts-node": "^10.9.1",
-    "@types/node": "^20.11.0",
-    "@types/express": "^4.17.21",
-    "@types/bcryptjs": "^2.4.6"
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
   }
 }

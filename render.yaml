@@ -1,35 +1,48 @@
 services:
   - type: web
     name: assetflow
-    env: docker
-    repo: https://github.com/wesley-gomes-teixeira/teste.git
+    runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: ./
-    plan: free
-    healthCheckPath: /
+    plan: standard
+    healthCheckPath: /health
+    healthCheckStartupTimeout: 300
+    numInstances: 1
+
+    # Expor apenas a porta que o frontend precisa
+    ports:
+      - number: 10000
+        protocol: HTTP
+
+    # Variáveis de ambiente com defaults seguros
     envVars:
-      - key: PORT
-        value: "10000"
-      - key: DB_HOST
-        value: dpg-d7t64hq8qa3s73f99sk0-a
-      - key: DB_PORT
-        value: "5432"
-      - key: DB_USER
-        value: wesley
-      - key: DB_PASSWORD
-        value: TyGuEFKgZIfLYEnFd6txgHed2gXOQjK5
-      - key: DB_NAME
-        value: assetflow_5x76
+      # Database
+      - key: DATABASE_URL
+        fromDatabase:
+          name: assetflow-db
+          property: connectionString
+
+      # Security
       - key: JWT_SECRET
-        value: assetflow-secret-change-in-production
+        generateValue: true
+      - key: NODE_ENV
+        value: production
+
+      # Services configuration
       - key: DISABLE_RABBITMQ
         value: "true"
+      - key: PORT
+        value: "10000"
+
+      # Internal routing (localhost para monolith)
       - key: INTERNAL_GATEWAY_URL
         value: http://127.0.0.1:3000
       - key: GATEWAY_BASE_URL
-        value: /api
+        value: /api/v1
       - key: AUTH_BASE_URL
         value: /auth
+
+      # Service URLs (localhost em monolith container)
       - key: USERS_SERVICE_URL
         value: http://127.0.0.1:3001
       - key: ASSETS_SERVICE_URL
@@ -37,4 +50,31 @@ services:
       - key: TICKETS_SERVICE_URL
         value: http://127.0.0.1:3003
 
+      # Logging
+      - key: LOG_LEVEL
+        value: info
 
+    # Build configuration
+    buildCommand: |
+      npm install && \
+      cd users-service && npm install && npm run build && cd .. && \
+      cd assets-service && npm install && npm run build && cd .. && \
+      cd tickets-service && npm install && npm run build && cd .. && \
+      cd gateway-service && npm install && npm run build && cd .. && \
+      cd frontend-service && npm install && npm run build
+
+    # Restart policy
+    restartPolicy: on_failure
+
+    # Max request/response size
+    maxRequestSizeBytes: 10485760
+
+    # Timeout
+    startTimeoutSeconds: 300
+
+# Database
+databases:
+  - name: assetflow-db
+    databaseName: assetflow
+    plan: standard
+    postgresMajorVersion: "16"

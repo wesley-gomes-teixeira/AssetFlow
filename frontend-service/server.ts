@@ -49,8 +49,16 @@ async function proxyToGateway(req, res, targetPath: string): Promise<void> {
 
 app.use(express.json());
 
+app.use((req, res, next) => {
+  if (req.path === "/config.js" || req.path.startsWith("/assets/")) {
+    res.setHeader("Cache-Control", "no-store");
+  }
+
+  next();
+});
+
 app.get("/config.js", (_req, res) => {
-  const gatewayBaseUrl = normalizeBaseUrl(process.env.GATEWAY_BASE_URL, "/api");
+  const gatewayBaseUrl = normalizeBaseUrl(process.env.GATEWAY_BASE_URL, "/api/v1");
   const authBaseUrl = normalizeBaseUrl(process.env.AUTH_BASE_URL, "/auth");
 
   res.type("application/javascript");
@@ -69,11 +77,18 @@ app.get("/health", (_req, res) => {
   });
 });
 
+app.all("/api", (req, res) => proxyToGateway(req, res, req.originalUrl));
 app.all("/api/*", (req, res) => proxyToGateway(req, res, req.originalUrl));
+app.all("/auth", (req, res) => proxyToGateway(req, res, req.originalUrl));
 app.all("/auth/*", (req, res) => proxyToGateway(req, res, req.originalUrl));
 
 app.use(express.static(publicDir));
 app.use("/assets", express.static(assetsDir));
+
+// Fallback: servir index.html para SPA routing
+app.get("*", (_req, res) => {
+  res.sendFile(path.join(publicDir, "index.html"));
+});
 
 app.listen(PORT, () => {
   console.log(`Frontend Service rodando em http://localhost:${PORT}`);
